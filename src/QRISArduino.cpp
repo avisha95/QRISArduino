@@ -243,24 +243,26 @@ void TFTKeypad::drawKey(int row,int col,bool pressed){
 }
 
 
-// ==================== TFTImageDisplay Implementation ====================
+// ==================== TFTImageDisplay ====================
 TFTImageDisplay* TFTImageDisplay::_instance = nullptr;
 
-TFTImageDisplay::TFTImageDisplay(Adafruit_GFX& display) : _display(&display) {}
+TFTImageDisplay::TFTImageDisplay(Adafruit_GFX& display) : _display(&display), 
+  _offsetX(0), _offsetY(0), _offsetOverride(false) {}
 
 bool TFTImageDisplay::show(const String& url, int targetWidth, int targetHeight, int timeoutSec,
                            std::function<void(int percent)> progressCb) {
-  _targetW = (targetWidth>0)  ? targetWidth  : _display->width();
-  _targetH = (targetHeight>0) ? targetHeight : _display->height();
-  // Compute offset before decode so _internalDraw always has correct values.
-  // setOffset() overrides auto-center.
+  
+  _targetW = targetWidth > 0 ? targetWidth : _display->width();
+  _targetH = targetHeight > 0 ? targetHeight : _display->height();
+
   if (!_offsetOverride) {
-    _offsetX = (_display->width() - _targetW) / 2;
-    _offsetY = 0; // top-aligned — leaves room for status text below the QR
+    _offsetX = (_display->width()  - _targetW) / 2;
+    _offsetY = (_display->height() - _targetH) / 2 - 15;   // Posisi tengah
   }
+
   _instance = this;
-  // Clear the QR area before rendering so no leftover pixels bleed through
-  _display->fillRect(_offsetX, _offsetY, _targetW, _targetH, 0x0000);
+  _display->fillRect(_offsetX, _offsetY, _targetW, _targetH, ILI9341_BLACK);
+
   return downloadAndDecode(url, timeoutSec, progressCb);
 }
 
